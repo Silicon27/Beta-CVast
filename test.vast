@@ -1,4 +1,4 @@
 use testing
 
-pyfunc printout: ["hello me pr:int"]
+pyfunc printout: ["Hello world. ", "Another", " world", " is upon us"]
 pyfunc printout: ["ht"]
