@@ -1,1 +1,4 @@
-print("hello me 'print")
+use testing
+
+pyfunc printout: ["hello me pr:int"]
+pyfunc printout: ["ht"]
