@@ -200,7 +200,6 @@ def list_parser(text, pos):
 
 
 def py_function_name_parser(text, pos):
-    print(imported_python_functions)
     if pos < len(text) and text[pos] in imported_python_functions:
         return text[pos], pos + 1
     return None, pos
@@ -256,13 +255,11 @@ def run():
     while position < len(tokenized_output):
         if tokenized_output[position] == "PRINT":
             message, position = print_syntax(tokenized_output, position)
-            print(message)
         elif tokenized_output[position] == "USE":
             message, position = use_parser(tokenized_output, position)
             run_use(message[1])
         elif tokenized_output[position] == "PYFUNC":
             message, position = pyfunc_syntax(tokenized_output, position)
-            print(message)
             run_pyfunc(message)
         else:
             if tokenized_output[position] in imported_python_functions:
@@ -270,9 +267,4 @@ def run():
 
 
 run()
-
-
-
-run()
-
 
