@@ -1,5 +1,7 @@
-# A test file in python for the `pyfunc` keyword
-
-def printout(*c):
+def printout(*c)
   for i in c:
     print(i)
+
+def add(a, b):
+  print(a+b)
+
