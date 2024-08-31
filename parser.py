@@ -1,6 +1,7 @@
-from vast_tokenizer import ConvertToToken
 import ast
-import sys, os
+import os
+
+from vast_tokenizer import ConvertToToken
 
 keywords = ["print", "use", "pyfunc", '"', "'", "(", ")", ":", ";", ",", "[", "]"]
 tokens = ["PRINT", "USE", "PYFUNC", '"', "'", "(", ")", ":", ";", ",", "[", "]"]
@@ -21,7 +22,7 @@ print(tokenized_output_w_spaces)
 # _____________________________________________________________
 
 variables = {}
-imported_python_functions = []
+imported_python_functions = {}
 
 
 # _____________________________________________________________
@@ -73,14 +74,14 @@ def pure(x):
 #  NOTE: OTHER IMPORTANT FUNCTIONS:
 # _____________________________________________________________
 
-def get_function_names(file_path):
+def get_function_names(file_path, lib_name):
     with open(file_path, 'r') as file:
         file_contents = file.read()
 
     tree = ast.parse(file_contents)
     function_names = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
 
-    return function_names
+    return {lib_name: function_names}
 
 
 # _____________________________________________________________
@@ -160,6 +161,8 @@ def colon_parser(text, pos):
 def value_parser(text, pos):
     if pos < len(text) and text[pos] == '"' or text[pos] == "'":
         return string_parser(text, pos, text[pos])
+    if pos < len(text) and text[pos].isdigit():
+        return int(text[pos]), pos + 1
     else:
         return convert_to_evaluable(text, pos)
 
@@ -179,7 +182,9 @@ def condition_parser(text, pos, end):
 def exec_py_parser(text, pos):
     try:
         global imported_python_functions
-        imported_python_functions = get_function_names(f"{text[pos]}.py")
+        lib_name = text[pos]
+        file_path = f"{lib_name}.py"
+        imported_python_functions.update(get_function_names(file_path, lib_name))
         return text[pos], pos + 1
     except Exception as e:
         print(f"Error executing {text[pos]}.py: {e}")
@@ -200,8 +205,11 @@ def list_parser(text, pos):
 
 
 def py_function_name_parser(text, pos):
-    if pos < len(text) and text[pos] in imported_python_functions:
+
+    if pos < len(text) and text[pos] in [(func) for lib, funcs in imported_python_functions.items() for func in funcs]:
+
         return text[pos], pos + 1
+    print(f"Function {text[pos]} not found in imported libraries.")
     return None, pos
 
 
@@ -223,17 +231,22 @@ position: int = 0
 #  NOTE: RUN FUNCTIONS:
 # _____________________________________________________________
 
-filename = ""
+
 def run_use(contents):
-    global filename
-    filename = contents
+    lib_name = contents
+    file_path = f"{lib_name}.py"
+    functions = get_function_names(file_path, lib_name)
+    imported_python_functions.update(functions)
 
 def run_pyfunc(contents):
     args_string = ""
     func = ""
+    lib_name = ""
     for item in contents:
-        if item in imported_python_functions:
-            func = item
+        for lib, funcs in imported_python_functions.items():
+            if item in funcs:
+                func = item
+                lib_name = lib
         if isinstance(item, list):
             for i in item:
                 if isinstance(i, str):
@@ -245,7 +258,7 @@ def run_pyfunc(contents):
                 if len(item) != 1:
                     args_string += ", "
     with open(f"{func}.py", "a+") as sfile:
-        sfile.write(f"from {filename} import {func}\n")
+        sfile.write(f"from {lib_name} import {func}\n")
         sfile.write(f"{func}({args_string})\n")
     os.system(f"python {func}.py")
     os.remove(f"{func}.py")
@@ -253,6 +266,9 @@ def run_pyfunc(contents):
 def run():
     global position
     while position < len(tokenized_output):
+        #
+        # print(tokenized_output[position])
+        # print(imported_python_functions)
         if tokenized_output[position] == "PRINT":
             message, position = print_syntax(tokenized_output, position)
         elif tokenized_output[position] == "USE":
@@ -267,4 +283,6 @@ def run():
 
 
 run()
+
+
 
