@@ -1,4 +1,9 @@
-use testing
+use stdlib
+use otherlib
 
-pyfunc printout: ["Hello world. ", "Another", " world", " is upon us"]
-pyfunc printout: ["ht"]
+pyfunc printout: ["Hello, World!"]
+pyfunc add: [2, 3, 4, 5]
+pyfunc isdigit: ["12"]
+
+pyfunc printout2: []
+
